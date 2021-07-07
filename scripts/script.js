@@ -1,21 +1,22 @@
 "use strict";
 
-const refHeaderCityButton = document.querySelector('.header__city-button');
+const refHeaderCityButton = document.querySelector(".header__city-button");
 //сохраняем наш город в локал сторедж
-refHeaderCityButton.textContent = localStorage.getItem('lomoda-location') || "Ваш город?";
+refHeaderCityButton.textContent =
+  localStorage.getItem("lomoda-location") || "Ваш город?";
 
-refHeaderCityButton.addEventListener('click', () => {
-    const city = prompt('Укажите Ваш город');
-    refHeaderCityButton.textContent = city;
-    localStorage.setItem('lomoda-location', city);
+refHeaderCityButton.addEventListener("click", () => {
+  const city = prompt("Укажите Ваш город");
+  refHeaderCityButton.textContent = city;
+  localStorage.setItem("lomoda-location", city);
 });
 //блокировка скролла
 const disableScroll = () => {
-    const widthScroll = window.innerWidth - document.body.offsetWidth;
+  const widthScroll = window.innerWidth - document.body.offsetWidth;
 
-    document.body.dbScrollY = window.scrollY;
+  document.body.dbScrollY = window.scrollY;
 
-    document.body.style.cssText = `
+  document.body.style.cssText = `
     position:fixed;
     top:${-window.scrollY}px;
     left:0;
@@ -27,34 +28,58 @@ const disableScroll = () => {
 };
 
 const enableScroll = () => {
-    document.body.style.cssText = '';
-    window.scroll({
-        top: document.body.dbScrollY,
-    });
+  document.body.style.cssText = "";
+  window.scroll({
+    top: document.body.dbScrollY,
+  });
 };
 
-
-
 //реализация модального окна открытие - закрытие
-const refSubheaderCart = document.querySelector('.subheader__cart');
-const refCartOverlay = document.querySelector('.cart-overlay');
+const refSubheaderCart = document.querySelector(".subheader__cart");
+const refCartOverlay = document.querySelector(".cart-overlay");
 
 const cartModelOpen = () => {
-    refCartOverlay.classList.add('cart-overlay-open');
-    disableScroll();
+  refCartOverlay.classList.add("cart-overlay-open");
+  disableScroll();
 };
 
 const cartModalClose = () => {
-    refCartOverlay.classList.remove('cart-overlay-open');
-    enableScroll();
+  refCartOverlay.classList.remove("cart-overlay-open");
+  enableScroll();
 };
 
-refSubheaderCart.addEventListener('click', cartModelOpen);
+refSubheaderCart.addEventListener("click", cartModelOpen);
 
-refCartOverlay.addEventListener('click', (event) => {
-    const target = event.target;
+refCartOverlay.addEventListener("click", (event) => {
+  const target = event.target;
 
-    if (target.matches('.cart__btn-close')|| target.matches('.cart-overlay')) {
-        cartModalClose();
-    }
+  if (target.matches(".cart__btn-close") || target.matches(".cart-overlay")) {
+    cartModalClose();
+  }
+});
+//запрос базы данных
+const getData = async () => {
+  const data = await fetch("db.json");
+
+  if (data.ok) {
+    return data.json();
+  } else {
+    throw new Error(
+      `Данные не были получены, ошибка ${data.status} ${data.statusText}`
+    );
+  }
+};
+
+const getGoods = (callback) => {
+  getData()
+    .then((data) => {
+      callback(data);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
+getGoods((data) => {
+  console.warn(data);
 });
