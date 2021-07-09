@@ -9,20 +9,62 @@ console.log(refGoodTitle);
 const refNavigationlist = document.querySelector(".navigation__list");
 const refNavigationlink = document.querySelectorAll(".navigation__link");
 console.log(refNavigationlink);
-
+const refCartListGoods = document.querySelector(".cart__list-goods");
+const refCartTotalCost = document.querySelector(".cart__total-cost");
 //1-сохраняем наш город в локал сторедж
-refHeaderCityButton.textContent =
-  localStorage.getItem("lomoda-location") || "Ваш город?";
+
+const updateLocation = () => {
+  refHeaderCityButton.textContent =
+    localStorage.getItem("lomoda-location") || "Ваш город?";
+};
 
 refHeaderCityButton.addEventListener("click", () => {
-  const city = prompt("Укажите Ваш город");
-  refHeaderCityButton.textContent = city;
-  localStorage.setItem("lomoda-location", city);
+  const city = prompt("Укажите Ваш город").trim();
+  if (city !== null) {
+    localStorage.setItem("lomoda-location", city);
+  }
+  updateLocation();
 });
 
+updateLocation();
+
+//4- создаю 2 функции получения и отправки данных из локал сторедж
+const getLocalStorage = () =>
+  JSON.parse(localStorage.getItem("cart-lomoda")) || "[]"; //?- после джейсон проверяет если  в данных ничего нет - то вернется налл;
+const setLocalStorage = (data) =>
+  localStorage.setItem("cart-lomoda", JSON.stringify(data));
+
+//4- рендерим корзину товаров
+const renderCart = () => {
+  refCartListGoods.textContent = "";
+
+  const cartItems = getLocalStorage();
+  let totalPrice = 0;
+  cartItems.forEach((item, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${item.brand} ${item.name}</td>
+        ${item.color ? `<td>${item.color}</td>` : "<td>-</td>"}
+        ${item.size ? `<td>${item.size}</td>` : "<td>-</td>"}
+        <td>${item.cost} &#8381;</td>
+        <td><button class="btn-delete" data-id="${
+          item.id
+        }">&times;</button></td>
+    `;
+    totalPrice += item.cost;
+    refCartListGoods.append(tr);
+  });
+  refCartTotalCost.textContent = totalPrice;
+};
 //1-блокировка скролла
 const disableScroll = () => {
+  if (document.disableScroll) {
+    return;
+  }
+
   const widthScroll = window.innerWidth - document.body.offsetWidth;
+  document.disableScroll = true;
 
   document.body.dbScrollY = window.scrollY;
 
@@ -48,6 +90,7 @@ const enableScroll = () => {
 const cartModelOpen = () => {
   refCartOverlay.classList.add("cart-overlay-open");
   disableScroll();
+  renderCart();
 };
 
 const cartModalClose = () => {
@@ -194,8 +237,10 @@ try {
       " "
     );
 
-  const renderCardGood = ([{ photo, brand, name, cost, color, sizes }]) => {
+  const renderCardGood = ([{ id, photo, brand, name, cost, color, sizes }]) => {
     //подставляет значения по каждому товару
+
+    const data = { id, brand, name, cost }; // создаю объект с данными из корзины
     console.log(brand);
     refCardGoodImage.src = `goods-image/${photo}`;
     refCardGoodImage.alt = `${brand} ${name}`;
@@ -217,6 +262,20 @@ try {
     } else {
       refCardGoodSizes.style.display = "none";
     }
+
+    refCardGoodBuy.addEventListener("click", () => {
+      if (color) {
+        data.color = refCardGoodColor.textContent;
+      }
+
+      if (sizes) {
+        data.size = refCardGoodSizes.textContent;
+      }
+
+      const cardData = getLocalStorage();
+      cardData.push(data);
+      setLocalStorage(cardData);
+    });
   };
   //вешаем слушателя событий на контейнер
   refСardGoodSelectWrapper.forEach((item) => {
